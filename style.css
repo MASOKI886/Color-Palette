@@ -57,3 +57,19 @@ input[type="file"] {
   font-weight: bold;
   font-size: 1.1rem;
 }
+
+.drop-zone {
+  border: 2px dashed #aaa;
+  padding: 1rem;
+  text-align: center;
+  color: #666;
+  margin-top: 1rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.drop-zone.drag-over {
+  border-color: #333;
+  background-color: #fafafa;
+  color: #000;
+}
