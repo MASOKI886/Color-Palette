@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Palette from Image – Extract & Name Colors</title>
+  <meta name="description" content="Upload an image to extract dominant colors, emotional tone, and color names. Download your palette or use it in designs.">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Image to Color Palette</h1>
+    <p>Upload your image to extract a beautiful color palette with names and emotional tone.</p>
+    <input type="file" id="upload" accept="image/*">
+    <img id="preview" crossorigin="anonymous" style="display: none; max-width: 100%; margin-top: 1rem;">
+    <div id="emotion" class="emotion"></div>
+    <div id="palette" class="palette"></div>
+    <div id="download-section" style="display:none; margin-top: 1rem;">
+      <button id="download-btn">📥 Download Swatch</button>
+      <p style="margin-top: 0.5rem;">Try this palette in <a href="https://partner.canva.com/" target="_blank">Canva</a> (affiliate)</p>
+    </div>
+  </div>
+
+  <script>
+    const upload = document.getElementById('upload');
+    const preview = document.getElementById('preview');
+    const paletteDiv = document.getElementById('palette');
+    const emotionDiv = document.getElementById('emotion');
+    const downloadBtn = document.getElementById('download-btn');
+    const downloadSection = document.getElementById('download-section');
+    const colorThief = new ColorThief();
+
+    const colorNames = [
+      "Blush Petal", "Midnight Sky", "Citrus Punch", "Ocean Haze", "Lavender Fog", "Burnt Sienna", "Peach Cream", "Moss Green"
+    ];
+
+    const emotionTags = {
+      warm: ["red", "orange", "yellow"],
+      cool: ["blue", "cyan", "green"],
+      neutral: ["gray", "white", "black"]
+    };
+
+    function rgbToHex(r, g, b) {
+      return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join("");
+    }
+
+    function getColorEmotion(rgbList) {
+      let warm = 0, cool = 0;
+      rgbList.forEach(([r, g, b]) => {
+        if (r > b && r > g) warm++;
+        else if (b > r && b > g) cool++;
+      });
+      if (warm >= cool) return "Mood: Warm & Vibrant";
+      else return "Mood: Cool & Calm";
+    }
+
+    function getName(index) {
+      return colorNames[index % colorNames.length];
+    }
+
+    upload.addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    preview.addEventListener('load', function () {
+      if (preview.complete) {
+        const palette = colorThief.getPalette(preview, 6);
+        paletteDiv.innerHTML = '';
+        palette.forEach((color, i) => {
+          const hex = rgbToHex(...color);
+          const colorBox = document.createElement('div');
+          colorBox.className = 'color';
+          colorBox.style.backgroundColor = hex;
+          colorBox.innerHTML = `<span>${hex}<br><small>${getName(i)}</small></span>`;
+          paletteDiv.appendChild(colorBox);
+        });
+        emotionDiv.textContent = getColorEmotion(palette);
+        downloadSection.style.display = 'block';
+      }
+    });
+
+    downloadBtn.addEventListener('click', function () {
+      html2canvas(paletteDiv).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'palette.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    });
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body>
+</html>
