@@ -122,6 +122,49 @@
 <img id="url-preview" crossorigin="anonymous" style="display:none; max-width:100%; margin-top:1rem;" alt="URL Image Preview" />
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+
+    const urlInput = document.getElementById('image-url');
+const loadUrlBtn = document.getElementById('load-url-btn');
+const urlPreview = document.getElementById('url-preview');
+
+loadUrlBtn.addEventListener('click', () => {
+  const url = urlInput.value.trim();
+  if (!url) return alert('Please enter an image URL.');
+
+  // Clear previous previews and results
+  preview.style.display = 'none';
+  paletteDiv.innerHTML = '';
+  emotionDiv.textContent = '';
+  downloadSection.style.display = 'none';
+
+  urlPreview.src = url;
+  urlPreview.style.display = 'block';
+});
+
+// When URL image loads, extract colors using ColorThief
+urlPreview.addEventListener('load', () => {
+  try {
+    const palette = colorThief.getPalette(urlPreview, 6);
+    paletteDiv.innerHTML = '';
+    palette.forEach((color, i) => {
+      const hex = rgbToHex(...color);
+      const colorBox = document.createElement('div');
+      colorBox.className = 'color';
+      colorBox.style.backgroundColor = hex;
+      colorBox.innerHTML = `<span>${hex}<br><small>${getName(i)}</small></span>`;
+      paletteDiv.appendChild(colorBox);
+    });
+    emotionDiv.textContent = getColorEmotion(palette);
+    downloadSection.style.display = 'block';
+  } catch (err) {
+    alert('Failed to extract colors. The image URL might not allow access (CORS issue) or it\'s not a valid image.');
+    paletteDiv.innerHTML = '';
+    emotionDiv.textContent = '';
+    downloadSection.style.display = 'none';
+  }
+});
+    
+  </script>
 </body>
 </html>
