@@ -7,6 +7,8 @@
   <meta name="description" content="Upload or drag and drop an image to extract dominant colors, emotional tone, and color names. Download your palette or use it in designs.">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 </head>
 <body>
   <div class="container">
@@ -105,6 +107,24 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+    const downloadBtn = document.getElementById('download-btn');
+
+downloadBtn.addEventListener('click', () => {
+  const palette = document.getElementById('palette');
+  if (!palette || palette.children.length === 0) {
+    alert('No palette to download.');
+    return;
+  }
+
+  html2canvas(palette).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'palette.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+});
+
+    
   </script>
 </body>
 </html>
