@@ -43,52 +43,22 @@
     </div>
   </div>
 
-  <script>
+<script>
 window.addEventListener('DOMContentLoaded', () => {
-  const urlInput = document.getElementById('image-url');
-  const loadUrlBtn = document.getElementById('load-url-btn');
-  const urlPreview = document.getElementById('url-preview');
+  // ✅ All your existing JS goes inside here.
+
+  const fileInput = document.getElementById('file');
+  const dropZone = document.getElementById('drop-zone');
   const preview = document.getElementById('preview');
   const paletteDiv = document.getElementById('palette');
   const emotionDiv = document.getElementById('emotion');
+  const downloadBtn = document.getElementById('download-btn');
   const downloadSection = document.getElementById('download-section');
+  const urlInput = document.getElementById('image-url');
+  const loadUrlBtn = document.getElementById('load-url-btn');
+  const urlPreview = document.getElementById('url-preview');
 
-  loadUrlBtn.addEventListener('click', () => {
-    const url = urlInput.value.trim();
-    if (!url) return alert('Please enter an image URL.');
-
-    // Clear previous preview
-    preview.style.display = 'none';
-    paletteDiv.innerHTML = '';
-    emotionDiv.textContent = '';
-    downloadSection.style.display = 'none';
-
-    // Load image
-    urlPreview.src = url;
-    urlPreview.style.display = 'block';
-  });
-
-  urlPreview.addEventListener('load', () => {
-    try {
-      const colorThief = new ColorThief();
-      const palette = colorThief.getPalette(urlPreview, 6);
-
-      paletteDiv.innerHTML = '';
-      palette.forEach((color, i) => {
-        const hex = rgbToHex(...color);
-        const colorBox = document.createElement('div');
-        colorBox.className = 'color';
-        colorBox.style.backgroundColor = hex;
-        colorBox.innerHTML = `<span>${hex}<br><small>${getName(i)}</small></span>`;
-        paletteDiv.appendChild(colorBox);
-      });
-
-      emotionDiv.textContent = getColorEmotion(palette);
-      downloadSection.style.display = 'block';
-    } catch (err) {
-      alert('Failed to extract colors. The image might not be accessible due to CORS.');
-    }
-  });
+  const colorThief = new ColorThief();
 
   function rgbToHex(r, g, b) {
     return (
@@ -108,7 +78,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function getColorEmotion(palette) {
-    // Same logic as your existing one
     const [r, g, b] = palette[0];
     if (r > 200 && g < 100 && b < 100) return "Mood: Passionate";
     if (r < 100 && g > 200 && b < 100) return "Mood: Fresh";
@@ -117,26 +86,92 @@ window.addEventListener('DOMContentLoaded', () => {
     if (r > 150 && g > 150 && b > 150) return "Mood: Soft";
     return "Mood: Neutral";
   }
-});
 
-    const downloadBtn = document.getElementById('download-btn');
-
-downloadBtn.addEventListener('click', () => {
-  const palette = document.getElementById('palette');
-  if (!palette || palette.children.length === 0) {
-    alert('No palette to download.');
-    return;
+  function extractPalette(image) {
+    const palette = colorThief.getPalette(image, 6);
+    paletteDiv.innerHTML = '';
+    palette.forEach((color, i) => {
+      const hex = rgbToHex(...color);
+      const colorBox = document.createElement('div');
+      colorBox.className = 'color';
+      colorBox.style.backgroundColor = hex;
+      colorBox.innerHTML = `<span>${hex}<br><small>${getName(i)}</small></span>`;
+      paletteDiv.appendChild(colorBox);
+    });
+    emotionDiv.textContent = getColorEmotion(palette);
+    downloadSection.style.display = 'block';
   }
 
-  html2canvas(palette).then(canvas => {
-    const link = document.createElement('a');
-    link.download = 'palette.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+  // 📁 File input
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        preview.src = img.src;
+        preview.style.display = 'block';
+        extractPalette(img);
+      };
+      img.src = URL.createObjectURL(file);
+    }
+  });
+
+  // 🖱️ Drag & drop
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+  });
+
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        preview.src = img.src;
+        preview.style.display = 'block';
+        extractPalette(img);
+      };
+      img.src = URL.createObjectURL(file);
+    }
+  });
+
+  // 🌐 Load from URL
+  loadUrlBtn.addEventListener('click', () => {
+    const url = urlInput.value.trim();
+    if (!url) return alert('Please enter an image URL.');
+    paletteDiv.innerHTML = '';
+    emotionDiv.textContent = '';
+    downloadSection.style.display = 'none';
+    urlPreview.src = url;
+    urlPreview.style.display = 'block';
+  });
+
+  urlPreview.addEventListener('load', () => {
+    try {
+      extractPalette(urlPreview);
+    } catch (err) {
+      alert('Failed to extract colors. Check if image is accessible.');
+    }
+  });
+
+  // ⬇️ Download
+  downloadBtn.addEventListener('click', () => {
+    html2canvas(paletteDiv).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'palette.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
   });
 });
-
-    
-  </script>
+</script>
 </body>
 </html>
